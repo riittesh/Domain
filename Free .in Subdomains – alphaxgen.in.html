@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Free .in Subdomains – alphaxgen.in</title>
+<style>
+:root{--bg:#fffaf2;--card:#fff;--ink:#1c1b19;--mute:#6b665d;--line:#e6dfd2;--acc:#e8590c;--ok:#2b8a3e;--bad:#c92a2a;--code:#f4efe4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161512;--card:#1f1d19;--ink:#f3eee4;--mute:#a39d90;--line:#37342d;--acc:#ff8a4c;--ok:#69db7c;--bad:#ff8787;--code:#2a2722}}
+:root[data-theme="dark"]{--bg:#161512;--card:#1f1d19;--ink:#f3eee4;--mute:#a39d90;--line:#37342d;--acc:#ff8a4c;--ok:#69db7c;--bad:#ff8787;--code:#2a2722}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:32px 18px 56px}
+h1{font-size:clamp(28px,7vw,40px);line-height:1.15;margin:8px 0 10px}
+h1 span{color:var(--acc)}
+p.lead{color:var(--mute);margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.row{display:flex;align-items:stretch;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.row:focus-within{border-color:var(--acc)}
+input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:18px;padding:12px 12px;outline:0}
+.suffix{display:flex;align-items:center;padding:0 12px;color:var(--mute);background:var(--code);font-size:16px;white-space:nowrap}
+#status{min-height:26px;margin:10px 0 0;font-weight:600}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+button{margin-top:12px;width:100%;padding:13px;border:0;border-radius:10px;background:var(--acc);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+input.plain{width:100%;border:2px solid var(--line);border-radius:10px;background:var(--bg);padding:10px 12px;font-size:16px}
+pre{background:var(--code);padding:12px;border-radius:10px;overflow-x:auto;font-size:13px;margin:10px 0 0}
+h2{font-size:18px;margin:0 0 8px}
+ul{margin:0;padding-left:20px;color:var(--mute)}
+small{color:var(--mute)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--code);color:var(--acc)}
+#result{display:none}
+</style>
+</head>
+<body>
+<main>
+<span class="badge">PROTOTYPE · DEMO MODE</span>
+<h1>Your free <span>.in</span> address.<br>No cost. No catch.</h1>
+<p class="lead">Pick a name and get <b>yourname.alphaxgen.in</b> for your website, free for everyone.</p>
+
+<div class="card">
+  <div class="row">
+    <input id="name" placeholder="yourname" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40">
+    <span class="suffix">.alphaxgen.in</span>
+  </div>
+  <div id="status" aria-live="polite"></div>
+  <div id="claim" style="display:none">
+    <label for="email">Email (for verification)</label>
+    <input class="plain" id="email" type="email" placeholder="you@example.com">
+    <label for="target">Your website address (where the name should point)</label>
+    <input class="plain" id="target" placeholder="yoursite.pages.dev">
+    <button id="go" type="button">Claim this name</button>
+  </div>
+</div>
+
+<div id="result" class="card">
+  <h2>🎉 Reserved in demo mode</h2>
+  <p style="margin:0;color:var(--mute)">When the live backend is connected, this DNS record is created automatically:</p>
+  <pre id="rec"></pre>
+</div>
+
+<div class="card">
+  <h2>How it works</h2>
+  <ul>
+    <li>Names are 3–40 characters: letters, numbers and hyphens.</li>
+    <li>Names are first come, first served. Reserved and abusive names are blocked.</li>
+    <li>HTTPS is enabled automatically by the hosting platform.</li>
+    <li>Phishing, malware and spam sites are removed.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>To go live (for the owner)</h2>
+  <ul>
+    <li>Register <b>alphaxgen.in</b> and move its DNS to Cloudflare.</li>
+    <li>Add a Cloudflare Worker + database that checks unique names and creates the DNS record.</li>
+    <li>Keep the DNS API token on the server only, never in this page.</li>
+  </ul>
+  <small>Until then this page checks names against a demo list in your browser only. Nothing is actually registered.</small>
+</div>
+</main>
+
+<script>
+var DOMAIN="alphaxgen.in";
+var RESERVED=["www","mail","admin","root","api","ftp","ns1","ns2","smtp","support","help","login","secure","billing","dashboard","app","blog","status","dev","test"];
+var BLOCKED=["bank","paytm","sbi","hdfc","icici","gov","police","phonepe","upi","kyc"];
+var TAKEN=["rahul","ananya","myshop","demo","india","shop","store","news"];
+var $=function(id){return document.getElementById(id)};
+var nameEl=$("name"),status=$("status"),claim=$("claim");
+
+function isValid(n){return /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/.test(n)&&n.indexOf("--")<0}
+function check(raw){
+  var n=raw.trim().toLowerCase();
+  if(!n)return{ok:false,msg:""};
+  if(n.length<3)return{ok:false,msg:"Too short (minimum 3 characters)"};
+  if(!isValid(n))return{ok:false,msg:"Use only letters, numbers and single hyphens; no hyphen at start or end"};
+  if(RESERVED.indexOf(n)>-1)return{ok:false,msg:"That name is reserved"};
+  for(var i=0;i<BLOCKED.length;i++){if(n.indexOf(BLOCKED[i])>-1)return{ok:false,msg:"Names that imitate banks or government are not allowed"}}
+  if(TAKEN.indexOf(n)>-1)return{ok:false,msg:"Already taken"};
+  return{ok:true,msg:n+"."+DOMAIN+" is available"};
+}
+nameEl.addEventListener("input",function(){
+  var r=check(nameEl.value);
+  status.textContent=r.msg;
+  status.className=r.ok?"ok":"bad";
+  claim.style.display=r.ok?"block":"none";
+  $("result").style.display="none";
+});
+$("go").addEventListener("click",function(){
+  var n=nameEl.value.trim().toLowerCase();
+  var email=$("email").value.trim(),target=$("target").value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){status.textContent="Enter a valid email";status.className="bad";return}
+  if(!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(target)){status.textContent="Enter a valid website address, e.g. mysite.pages.dev";status.className="bad";return}
+  if(!check(n).ok)return;
+  TAKEN.push(n);
+  $("rec").textContent="Type:   CNAME\nName:   "+n+"\nTarget: "+target+"\nFull:   "+n+"."+DOMAIN+"\nProxy:  on (HTTPS automatic)";
+  $("result").style.display="block";
+  claim.style.display="none";
+  status.textContent="Reserved (demo only)";status.className="ok";
+  $("result").scrollIntoView({behavior:"smooth"});
+});
+</script>
+</body>
+</html>
